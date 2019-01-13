@@ -1,13 +1,7 @@
 import numpy as np
 from collections import defaultdict
-import networkx as nx
-import matplotlib.pyplot as plt
 import math
-import sys
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-import time
+import draw_manager
 
 def calc_heuristics_manhattan(aPoint, bPoint):
     return abs(aPoint[0] - bPoint[0]) + abs(aPoint[1] - bPoint[1])
@@ -250,16 +244,9 @@ def calc_price(path):
             price += narray[step]
     return price
 
-def draw_end_path(path):
-    color = QBrush(QColor(255, 255, 0))
-    for step in path:
-        if(narray[tuple(step)] >= 0):
-            widget.scene.addRect(step[1] * 10, step[0] * 10, 10, 10, QPen(color, 1), color)
-            widget.scene.update()
-            qApp.processEvents()
-            time.sleep(0.05)
 
-narray = np.loadtxt("labyrinth_12.txt", int, delimiter=",")
+
+narray = np.loadtxt("labyrinth_3.txt", int, delimiter=",")
 start = np.argwhere(narray == -2)
 start = list(map(list, start))[0]
 end = np.argwhere(narray == -3)
@@ -308,50 +295,12 @@ for e in end:
 
     print(price)
 """
+dm = draw_manager.DrawManager(narray)
+
+dm.draw_lab()
+
+dm.draw_end_path(minEnd)
+
+dm.call_sys_exit()
 
 
-
-app=QApplication([])
-widget = QDialog()
-widget.setWindowTitle("Labirint")
-widget.setLayout(QVBoxLayout())
-widget.resize(1000, 1000)
-widget.layout().setContentsMargins(2, 2, 2, 2)
-widget.scene = QGraphicsScene(widget)
-widget.scene.setBackgroundBrush(Qt.white)
-widget.view = QGraphicsView(widget.scene, widget)
-widget.view.setAlignment(Qt.AlignVCenter | Qt.AlignHCenter)
-widget.view.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-widget.view.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-widget.view.setRenderHints(QPainter.Antialiasing | QPainter.SmoothPixmapTransform)
-widget.layout().addWidget(widget.view)
-widget.scene.setSceneRect(0, 0, widget.view.width(), widget.view.height())
-widget.view.setSceneRect(0, 0, widget.view.width(), widget.view.height())
-widget.show()
-widget.raise_()
-widget.scene.update()
-
-maxVal = np.max(narray)
-
-for y in range(np.size(narray, 0)):
-    for x in range(np.size(narray, 1)):
-        if(narray[(y,x)] == -1 ):
-            color = QBrush(QColor(0,0,0))
-        elif(narray[(y,x)] == -2):
-            color = QBrush(QColor(0,0,255))
-        elif(narray[(y,x)] == -3):
-            color = QBrush(QColor(0,255,0))
-        else:
-            weight =  1 - narray[(y,x)] / maxVal
-            color = QBrush(QColor(255,255 * weight,255 * weight))
-
-        widget.scene.addRect(x * 10, y * 10, 10, 10, QPen(color, 1), color)
-        widget.scene.update()
-qApp.processEvents()
-
-draw_end_path(minEnd)
-
-widget.scene.update()
-qApp.processEvents()
-
-sys.exit(app.exec_())

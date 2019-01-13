@@ -1,7 +1,7 @@
 import numpy as np
 import math
 import time
-
+import draw_manager
 def calc_heuristics_kvazi_manthattan(aPoint, bPoint, lab):
     dist = 0
     prevPoint = aPoint.copy()
@@ -102,16 +102,40 @@ def ida_star(end):
         bound = t
 
 
-narray = np.loadtxt("labyrinth_12.txt", int, delimiter=",")
+narray = np.loadtxt("labyrinth_7.txt", int, delimiter=",")
 start = np.argwhere(narray == -2)
 start = list(map(list, start))[0]
 ends = np.argwhere(narray == -3)
 ends = list(map(list,ends))
 
 
-for end in ends:
+minEnd = None
+minPrice = 0
+minTime = 0
+for e in ends:
     timeStart = time.clock()
-    A = ida_star(tuple(end))
+    tmp = ida_star(tuple(e))
     timeStart = time.clock() - timeStart
-    print("Time spent on finding path: {}s  Price of path: {}".format(timeStart, A[1]))
+    price = tmp[1]
 
+    if(not(minEnd)):
+        minEnd = tmp[0]
+        minPrice = tmp[1]
+        minTime = timeStart
+    else:
+        if price < minPrice:
+            minPrice = price
+            minEnd = tmp[0]
+            minTime = timeStart
+    print("Time spent on finding path: {}s  Price of path: {}".format(timeStart, tmp[1]))
+
+print("\nFastest route has price {} with time {}s".format(minPrice, minTime))
+
+
+dm = draw_manager.DrawManager(narray)
+
+dm.draw_lab()
+
+dm.draw_end_path(minEnd)
+
+dm.call_sys_exit()
