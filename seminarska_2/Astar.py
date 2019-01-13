@@ -251,7 +251,7 @@ start = np.argwhere(narray == -2)
 start = list(map(list, start))[0]
 end = np.argwhere(narray == -3)
 end = list(map(list,end))
-
+appended = 0
 recalc = find_path_recalc(end)
 print("path found when recalculating has price: {}".format(calc_price(recalc)))
 
