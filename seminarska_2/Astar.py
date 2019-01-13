@@ -246,7 +246,7 @@ def calc_price(path):
 
 
 
-narray = np.loadtxt("labyrinth_3.txt", int, delimiter=",")
+narray = np.loadtxt("labyrinth_4.txt", int, delimiter=",")
 start = np.argwhere(narray == -2)
 start = list(map(list, start))[0]
 end = np.argwhere(narray == -3)

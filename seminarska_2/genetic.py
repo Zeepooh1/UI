@@ -3,6 +3,8 @@ import random
 import collections
 import draw_manager
 import time
+from itertools import combinations
+
 class Gene:
     def __init__(self):
         self.move = (0, 0)
@@ -26,29 +28,37 @@ class Gene:
             if(neighbor == "LEFT"):
                 n = current[0] + 0, current[1] - 1
                 h = 0
+                j = 0
                 for i in self.heuristic_weights:
-                    h+= (calc_heuristics_manhattan(n, end) + 1) * i
+                    h+= (calc_heuristics_manhattan(n, ends[j]) + 1) * i
+                    j += 1
                 h /= len(self.heuristic_weights)
                 left = self.left_weight * (1.0 / h) + (1.0 / (1 + counter[n]))
             if(neighbor == "RIGHT"):
                 n = (current[0], current[1] + 1)
                 h = 0
+                j = 0
                 for i in self.heuristic_weights:
-                    h += (calc_heuristics_manhattan(n, end) + 1) * i
+                    h += (calc_heuristics_manhattan(n, ends[j]) + 1) * i
+                    j += 1
                 h /= len(self.heuristic_weights)
                 right = self.right_weight * ( 1.0 / h) + (1.0 / (1 + counter[n]))
             if(neighbor == "UP"):
                 n = (current[0] - 1, current[1])
                 h = 0
+                j = 0
                 for i in self.heuristic_weights:
-                    h += (calc_heuristics_manhattan(n, end) + 1) * i
+                    h += (calc_heuristics_manhattan(n, ends[j]) + 1) * i
+                    j += 1
                 h /= len(self.heuristic_weights)
                 up = self.up_weight * ( 1.0 / h) + (1.0 / (1 + counter[n]))
             if(neighbor == "DOWN"):
                 n = (current[0] + 1, current[1])
                 h = 0
+                j = 0
                 for i in self.heuristic_weights:
-                    h += (calc_heuristics_manhattan(n, end) + 1) * i
+                    h += (calc_heuristics_manhattan(n, ends[j]) + 1) * i
+                    j += 1
                 h /= len(self.heuristic_weights)
                 down = self.down_weight * (1.0 / h) + (1.0 / (1 + counter[n]))
 
@@ -134,12 +144,14 @@ class Walker:
         return price
 
     def mutate(self):
+        mutations += 1
         self.genes[random.randint(0, len(self.genes) - 1)].mutate()
 
     @staticmethod
     def reproduce(a_parent, b_parent, mutate = True):
         a_child = Walker(empty_spaces)
         b_child = Walker(empty_spaces)
+        mutated = False
         for i in range(empty_spaces):
             if(random.random() < 0.5):
                 a_child.genes[i] = a_parent.genes[i]
@@ -148,12 +160,13 @@ class Walker:
                 a_child.genes[i] = b_parent.genes[i]
                 b_child.genes[i] = a_parent.genes[i]
             if(mutate):
-                if(random.random() < 0.005):
+                if(random.random() < 0.01):
                     if(random.random() < 0.5):
                         a_child.mutate()
                     else:
                         b_child.mutate()
-        return (a_child, b_child)
+                    mutated = True
+        return (a_child, b_child, mutated)
 
 
 
@@ -211,23 +224,25 @@ empty_spaces += len(np.argwhere(narray == -3))
 dm = draw_manager.DrawManager(narray)
 
 dm.draw_lab()
-
 generation = list()
-for i in range(100):
+for i in range(200):
     generation.append(Walker(empty_spaces))
 
 old_generation = None
-for i in range(50):
+combos = [i for i in range(20)]
+combos = [i for i in combinations(combos, 2)]
+for i in range(10):
     for walker in generation:
         walker.walk(ends[0])
-
-
+    mutations = 0
     generation.sort(key = lambda x: x.f_score)
     if old_generation != None:
         if generation[0].f_score > old_generation[0].f_score:
             generation = old_generation.copy()
+            #random.shuffle(generation)
             print("GENERATIONAL DISASTER")
     new_generation = list()
+    """
     for i in range(10):
         for j in range(10):
             children = Walker.reproduce(generation[i], generation[j])
@@ -236,17 +251,21 @@ for i in range(50):
             else:
                 new_generation.append(children[0])
                 new_generation.append(children[1])
+    """
+    for j in combos:
+        children = Walker.reproduce(generation[0], generation[j[1]])
+        new_generation.append(children[0])
+        new_generation.append(children[1])
+        if children[3]:
+            mutations += 1
+
+    #for j in range(5):
+     #   new_generation.append(generation[i])
     old_generation = generation.copy()
     generation = new_generation.copy()
-    dm.draw_end_path(old_generation[0].path)
-    time.sleep(0.3)
-    dm.draw_lab()
-    print("Best f_score: {}".format(old_generation[0].f_score))
+    print("Best f_score: {}\npath price: {}\nnumber of mutations: {}".format(old_generation[0].f_score, old_generation[0].calc_price(), mutations))
 
-found = 0
-for walker in old_generation:
-    if walker.found:
-        found += 1
+
+dm.draw_end_path(old_generation[0].path)
 
 dm.call_sys_exit()
-print("{} walkers have found the end".format(found))
